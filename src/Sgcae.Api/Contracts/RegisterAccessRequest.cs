@@ -5,5 +5,5 @@ namespace Sgcae.Api.Contracts;
 
 public sealed record RegisterAccessRequest(
     string CredentialCode,
-    [property: Required] Guid? AccessPointId,
-    [property: Required] MovementType? MovementType);
+    [Required] Guid? AccessPointId,
+    [Required] MovementType? MovementType);
