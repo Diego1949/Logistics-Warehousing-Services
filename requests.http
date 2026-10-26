@@ -1,0 +1,136 @@
+@baseUrl = http://localhost:5080
+
+### 1. List access points (seeded on startup)
+GET {{baseUrl}}/api/access-points
+
+### 2. Create an access point
+# @name createAccessPoint
+POST {{baseUrl}}/api/access-points
+Content-Type: application/json
+
+{
+  "name": "Loading Dock {{$randomInt 1000 9999}}",
+  "description": "Truck loading and unloading dock"
+}
+
+### 3. Get access point by id
+GET {{baseUrl}}/api/access-points/{{createAccessPoint.response.body.$.id}}
+
+### 4. Create an employee
+# @name createEmployee
+POST {{baseUrl}}/api/employees
+Content-Type: application/json
+
+{
+  "employeeCode": "EMP-{{$randomInt 10000 99999}}",
+  "firstName": "Laura",
+  "lastName": "Gomez",
+  "email": "laura.gomez{{$randomInt 10000 99999}}@logistics.com",
+  "jobTitle": "Forklift Operator",
+  "department": "Warehouse"
+}
+
+### 5. Get employee by id
+GET {{baseUrl}}/api/employees/{{createEmployee.response.body.$.id}}
+
+### 6. List employees (paginated)
+GET {{baseUrl}}/api/employees?page=1&pageSize=10
+
+### 7. Update employee
+PUT {{baseUrl}}/api/employees/{{createEmployee.response.body.$.id}}
+Content-Type: application/json
+
+{
+  "firstName": "Laura",
+  "lastName": "Gomez",
+  "email": "{{createEmployee.response.body.$.email}}",
+  "jobTitle": "Warehouse Supervisor",
+  "department": "Warehouse"
+}
+
+### 8. Assign a credential to the employee
+# @name createCredential
+POST {{baseUrl}}/api/credentials
+Content-Type: application/json
+
+{
+  "employeeId": "{{createEmployee.response.body.$.id}}",
+  "code": "CRED-{{$randomInt 10000 99999}}"
+}
+
+### 9. Get credential by id
+GET {{baseUrl}}/api/credentials/{{createCredential.response.body.$.id}}
+
+### 10. Get credentials by employee
+GET {{baseUrl}}/api/credentials/employee/{{createEmployee.response.body.$.id}}
+
+### 11. Register an authorized entry
+POST {{baseUrl}}/api/access-logs
+Content-Type: application/json
+
+{
+  "credentialCode": "{{createCredential.response.body.$.code}}",
+  "accessPointId": "{{createAccessPoint.response.body.$.id}}",
+  "movementType": "Entry"
+}
+
+### 12. Register an authorized exit
+POST {{baseUrl}}/api/access-logs
+Content-Type: application/json
+
+{
+  "credentialCode": "{{createCredential.response.body.$.code}}",
+  "accessPointId": "{{createAccessPoint.response.body.$.id}}",
+  "movementType": "Exit"
+}
+
+### 13. Disable the access point
+PATCH {{baseUrl}}/api/access-points/{{createAccessPoint.response.body.$.id}}/disable
+
+### 14. Register an attempt on a disabled access point (rejected: AccessPointDisabled)
+POST {{baseUrl}}/api/access-logs
+Content-Type: application/json
+
+{
+  "credentialCode": "{{createCredential.response.body.$.code}}",
+  "accessPointId": "{{createAccessPoint.response.body.$.id}}",
+  "movementType": "Entry"
+}
+
+### 15. Enable the access point
+PATCH {{baseUrl}}/api/access-points/{{createAccessPoint.response.body.$.id}}/enable
+
+### 16. Block the credential
+PATCH {{baseUrl}}/api/credentials/{{createCredential.response.body.$.id}}/block
+
+### 17. Register an attempt with the blocked credential (rejected: CredentialBlocked)
+POST {{baseUrl}}/api/access-logs
+Content-Type: application/json
+
+{
+  "credentialCode": "{{createCredential.response.body.$.code}}",
+  "accessPointId": "{{createAccessPoint.response.body.$.id}}",
+  "movementType": "Entry"
+}
+
+### 18. Register an attempt with an unknown credential (rejected: CredentialNotFound)
+POST {{baseUrl}}/api/access-logs
+Content-Type: application/json
+
+{
+  "credentialCode": "UNKNOWN-CODE",
+  "accessPointId": "{{createAccessPoint.response.body.$.id}}",
+  "movementType": "Entry"
+}
+
+### 19. Revoke the credential
+PATCH {{baseUrl}}/api/credentials/{{createCredential.response.body.$.id}}/revoke
+
+### 20. Access history filtered by employee and result
+GET {{baseUrl}}/api/access-logs?employeeId={{createEmployee.response.body.$.id}}&result=Rejected&page=1&pageSize=20
+
+### 21. Access history filtered by access point and date range
+GET {{baseUrl}}/api/access-logs?accessPointId={{createAccessPoint.response.body.$.id}}&from=2020-01-01T00:00:00Z&to=2100-01-01T00:00:00Z&page=1&pageSize=20
+
+### 22. Deactivate the employee
+PATCH {{baseUrl}}/api/employees/{{createEmployee.response.body.$.id}}/deactivate
